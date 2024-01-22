@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POI Analysis</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto:wght@100&display=swap');
+
+        *{
+            font-family: 'Open Sans', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('kafe.png') no-repeat;
+            background-size: cover;
+        }
+
+        #container {
+            text-align: center;
+            opacity: 1;
+            background-color: rgb(235, 235, 235);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        }
+
+        #resultMessage {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #chartContainer {
+            margin-top: 20px;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .button-container button {
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .button-container button.turkish {
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        .button-container button.foreign {
+            background-color: #e44b3a;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            display: none;
+        }
+
+        #informationContainer{
+            font-size: 12px;    
+            margin-top: 20px;
+        }
+
+        #result{
+            display: none;
+            position: absolute;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 700px;
+            height: 700px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        #resultContainer{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 500px;
+            height: 500px;
+            background-color: #fff;
+        }
+
+        #tryAgain{
+            width: 140px;
+            height: 32px;
+            size: 15px;
+            color: white;
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 5px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <p id="question">Kafe isimlerinin çoğu Türkçe mi yoksa yabancı isimli midir?</p>
+        <label>
+            <input id="button-turkce" type="radio" name="language" value="TURKCE">
+            Türkçe
+        </label>
+        <label>
+            <input id="button-yabanci" type="radio" name="language" value="YABANCI">
+            Yabancı
+        </label>
+        <div class="button-container">
+            <button id="turkishButton" class="turkish" onclick="handleUserResponse(getSelectedLanguage())">Cevapla</button>
+            <button id="foreignButton" class="foreign" onclick="nextQuestion()">Sonraki</button>
+        </div>
+        <div id="resultMessage"></div>
+        <div id="chartContainer"></div>
+        <div id="informationContainer"></div>
+    </div>
+
+    
+    <div id="result">
+        <h2>Anket Sonucu</h2>
+        <h3 id="resultText"></h3>
+        <div id="resultContainer"></div>
+        <button id="tryAgain" type="button">Yeniden Oyna</button>
+    </div>
+
+    <script>
+        let container = document.getElementById('container')
+        let result= document.getElementById('result')
+        let resultContainer = document.getElementById('resultContainer')
+        let resultText = document.getElementById('resultText')
+        let turkishButton = document.getElementById('turkishButton')
+        let foreignButton = document.getElementById('foreignButton')
+ 
+        // let scorePoint = document.getElementById('score')
+        let tryAgain = document.getElementById('tryAgain')
+        let score = 0
+
+        let jsonData;
+        let currentQuestionIndex = 0;
+        let cafesInCategory;
+        let cafesInCategoryInfo;
+
+        const questions = [
+            { text: 'Kafe isimlerinin çoğu Türkçe mi yoksa yabancı isimli midir?', category: 'KAFE' },
+            { text: 'Market isimlerinin çoğu Türkçe mi yoksa yabancı isimli midir?', category: 'MARKET' },
+            { text: 'Giyim mağazalarının isimlerinin çoğu Türkçe mi yoksa yabancı isimli midir?', category: 'GİYİM' },
+            { text: 'Restoran isimlerinin çoğu Türkçe mi yoksa yabancı isimli midir?', category: 'RESTORAN' },
+            // Diğer soruları ekleyebilirsiniz...
+        ];
+
+        // Function to fetch JSON data from an external file
+        async function fetchJSONData() {
+            try {
+                const response = await fetch('pie_graph_total2.json'); // Adjust the path accordingly
+                jsonData = await response.json();
+                const response_poi_info = await fetch('pie_graph.json'); // Adjust the path accordingly
+                jsonDataPoi = await response_poi_info.json();
+
+                if (!response.ok) {
+                    throw new Error('Error fetching JSON data: ' + response.statusText);
+                }
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+
+        // Function to check if most cafe names in a category are Turkish or Foreign
+        async function checkCafeNames(language) {
+            if (!jsonData) {
+                await fetchJSONData();
+            }
+
+            cafesInCategory = jsonData.filter(item => item.KATEGORI === questions[currentQuestionIndex].category && item.json_featuretype === 'pie_graph_total2');
+
+            if (cafesInCategory.length > 0) {
+                const correctLanguage = getCorrectLanguage(cafesInCategory);
+                if (language=="TURKCE" || language == "YABANCI"){
+                    displayResult(correctLanguage === language);
+                    displayPieChart(correctLanguage);
+                    const foreignButton = document.querySelector(".foreign");
+                    if (foreignButton) {
+                        foreignButton.style.display = "block";
+                    }
+                }
+                else{
+                    resultMessage.innerHTML = "Lütfen Seçim Yapınız!"
+                }
+                
+            } else {
+                console.log('No data available for the selected category.');
+            }
+        }
+
+        function getSelectedLanguage() {
+        // Select the checked radio button
+        var selectedButton = document.querySelector('input[name="language"]:checked');
+        console.log(selectedButton);
+        // Check if any radio button is selected
+        if (selectedButton) {
+            // Get the value of the selected radio button
+            var selectedValue = selectedButton.value;
+        } else {
+            console.log("No language selected");
+        }
+        return selectedValue
+    }
+
+        // Function to get the correct language based on the highest POI_SAYISI
+        function getCorrectLanguage(cafesInCategory) {
+            const sortedByPoiCount = cafesInCategory.sort((a, b) => parseInt(b.POI_SAYISI) - parseInt(a.POI_SAYISI));
+            return sortedByPoiCount[0].DIL;
+        }
+
+        function toTitleCase(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Function to display result message
+        function displayResult(isCorrect) {
+            const resultMessage = document.getElementById('resultMessage');
+            resultMessage.innerHTML = isCorrect ? 'Cevabınız Doğru' : 'Cevabınız Yanlış';
+            if(resultMessage.innerHTML == 'Cevabınız Doğru'){
+                score += 1
+                console.log(score); 
+            }
+            resultMessage.className = isCorrect ? 'correct' : 'incorrect';
+            cafesInCategoryInfo = jsonDataPoi.filter(item => item.KATEGORI === questions[currentQuestionIndex].category && item.json_featuretype === 'pie_graph');
+            let cat = questions[currentQuestionIndex].category.toLowerCase()
+            let title_cat = toTitleCase(cat)   
+            document.getElementById('informationContainer').innerText = `En Çok Tekrar Eden Türkçe ${title_cat} İsmi: ` + cafesInCategoryInfo[0].POI_ADI + "\n" + `En Çok Tekrar Eden Yabancı ${title_cat} İsmi: ` + cafesInCategoryInfo[1].POI_ADI
+        }   
+
+function displayPieChart(correctLanguage) {
+    const chartContainer = document.getElementById('chartContainer');
+
+    // Clear previous charts
+    chartContainer.innerHTML = '';
+
+    const ctx = document.createElement('canvas').getContext('2d');
+    chartContainer.appendChild(ctx.canvas);
+
+    // Update this line to append the canvas to the 'resultContainer' instead of 'chartContainer'
+    document.getElementById('chartContainer').appendChild(ctx.canvas);
+
+    // Find the index of the correct language in the dataset
+    const correctLanguageIndex = cafesInCategory.findIndex(item => item.DIL === correctLanguage);
+
+    if (cafesInCategory[0].DIL == 'YABANCI') {
+        temp = cafesInCategory[0];
+        cafesInCategory[0] = cafesInCategory[1];
+        cafesInCategory[1] = temp;
+    }
+
+    // Create an array of colors based on the correct language index
+    // const colors = cafesInCategory.map((item, index) => (index === correctLanguageIndex ? turkishColor : foreignColor));
+
+    const colors = cafesInCategory.map(item => item.DIL === 'TURKCE' ? '#0070ff' : '#ff5500');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: cafesInCategory.map(item => item.DIL),
+            datasets: [{
+                data: cafesInCategory.map(item => parseInt(item.POI_SAYISI)),
+                backgroundColor: colors,
+                hoverBackgroundColor: colors, // Set hover colors to be the same
+                borderWidth: 1,
+                borderColor: '#ffffff', // Border color for each segment
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'POI Count by Cafe Names in ' + cafesInCategory[0].KATEGORI
+            },
+            maintainAspectRatio: false, // Disable the aspect ratio
+            legend: {
+                display: true,
+                position: 'bottom',
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        const dataIndex = tooltipItem.index;
+                        return data.labels[dataIndex] + ': ' + data.datasets[0].data[dataIndex];
+                    }
+                }
+            },
+            cutoutPercentage: 0, // Set to 0 for a complete pie chart
+        }
+    });
+}
+
+const linksContainer = document.createElement('div');
+// Function to display pie chart
+function displayPieChartScore() {
+    // Sample data
+    const questionCount = questions.length;
+    const resultData = [score, questionCount-score];
+    const colors = ['green', 'red'];
+    
+
+    resultText.innerHTML = "Puanınız : " + score * 25 + "/" + questionCount * 25;
+
+    // Get the resultContainer element
+    const resultContainer = document.getElementById('resultContainer');
+
+    // Create a canvas element to render the pie chart
+    const canvas = document.createElement('canvas');
+    resultContainer.appendChild(canvas);
+
+    // Get the 2D context of the canvas
+    const ctx = canvas.getContext('2d');
+
+    // Create the pie chart with animation
+    const pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Doğru Cevap', 'Yanlış Cevap'],
+            datasets: [{
+                data: resultData,
+                backgroundColor: colors,
+            }]
+        },
+        options: {
+            legend: {
+                display: true,
+            },
+            animation: {
+                duration: 1000, // Set the duration of the animation in milliseconds
+                easing: 'easeOutQuart', // Set the easing function for the animation
+            },
+        }
+    });
+
+
+
+    // Add links inside the resultContainer
+    
+    resultContainer.appendChild(linksContainer);
+}
+
+
+        // Function to handle user response
+        function handleUserResponse(language) {
+            var selectedButton = document.querySelector('input[name="language"]:checked');
+            checkCafeNames(language);
+            if (selectedButton != null) {
+                turkishButton.style.display = 'none'
+            } 
+        }
+
+        let informationContainer = document.getElementById('informationContainer')
+        let counter = 0
+        // Function to move to the next question
+        function nextQuestion() {
+            // Uncheck all radio buttons
+            document.querySelectorAll('input[name="language"]').forEach(radio => radio.checked = false);
+            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+            document.getElementById('question').innerText = questions[currentQuestionIndex].text;
+            document.getElementById('resultMessage').innerText = '';
+            document.getElementById('resultMessage').className = ''; // Remove the result message class
+            document.getElementById('chartContainer').innerHTML = '';
+
+            if (questions[currentQuestionIndex].category == 'GİYİM'){
+                var body = document.getElementsByTagName('body')[0];
+                body.style.backgroundImage = `url(giyim.png)`
+                body.style.backgroundRepeat = 'no-repeat';
+                body.style.backgroundSize = 'cover';
+            }else{
+                var body = document.getElementsByTagName('body')[0];
+                body.style.backgroundImage = `url(${questions[currentQuestionIndex].category.toLowerCase()}.png)`
+                body.style.backgroundRepeat = 'no-repeat';
+                body.style.backgroundSize = 'cover';
+            }
+
+            if (currentQuestionIndex == 0 && counter != 0) {
+                container.style.display = 'none'
+                displayPieChartScore()
+                result.style.display = 'flex'
+
+                // scorePoint.innerText = score
+
+            }
+            counter = 1
+            turkishButton.style.display = 'block'
+            const foreignButton = document.querySelector(".foreign");
+            if (foreignButton) {
+                foreignButton.style.display = "none";
+            }
+            informationContainer.innerText = ''
+        }
+
+        tryAgain.addEventListener('click', function() {
+            container.style.display = 'block'
+            result.style.display = 'none'
+            resultContainer.innerHTML = '';
+            score = 0
+            counter = 0
+        })
+
+        // Initial question
+        document.getElementById('question').innerText = questions[currentQuestionIndex].text;
+
+        
+        // body.style.backgroundImage = 'url(https://www.alanyagunesi.com/images/ark/iBB-Baskani-Ekrem-imamoglu_780_x_345_cb5c4.jpg) ';
+        // body.style.backgroundImage = 'url(https://mediacdn.yirmidort.tv/Documents/yirmidorthaber/images/2023/11/24/hepsi-sayistay-raporunda--134_2-41.jpg) ';
+        // body.style.backgroundRepeat = 'no-repeat';
+        // body.style.backgroundSize = 'cover';
+
+    </script>
+</body>
+</html>

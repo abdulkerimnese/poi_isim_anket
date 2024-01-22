@@ -1,0 +1,50 @@
+[
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 1243,
+		"KATEGORI" : "KAFE",
+		"DIL" : "TURKCE"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 8315,
+		"KATEGORI" : "KAFE",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 16709,
+		"KATEGORI" : "RESTORAN",
+		"DIL" : "TURKCE"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 8756,
+		"KATEGORI" : "RESTORAN",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 19490,
+		"KATEGORI" : "MARKET",
+		"DIL" : "TURKCE"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 5663,
+		"KATEGORI" : "MARKET",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 10950,
+		"KATEGORI" : "GİYİM",
+		"DIL" : "TURKCE"
+	},
+	{
+		"json_featuretype" : "pie_graph_total",
+		"POI_SAYISI" : 14136,
+		"KATEGORI" : "GİYİM",
+		"DIL" : "YABANCI"
+	}
+]

@@ -1,0 +1,58 @@
+[
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Kahve Dünyası",
+		"POI_SAYISI" : "77",
+		"KATEGORI" : "KAFE",
+		"DIL" : "TÜRKÇE"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Starbucks",
+		"POI_SAYISI" : "129",
+		"KATEGORI" : "KAFE",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Paşa Döner",
+		"POI_SAYISI" : "112",
+		"KATEGORI" : "RESTORAN",
+		"DIL" : "TÜRKÇE"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Burger King",
+		"POI_SAYISI" : "226",
+		"KATEGORI" : "RESTORAN",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "ŞOK",
+		"POI_SAYISI" : "1902",
+		"KATEGORI" : "MARKET",
+		"DIL" : "TÜRKÇE"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "A101",
+		"POI_SAYISI" : "1504",
+		"KATEGORI" : "MARKET",
+		"DIL" : "YABANCI"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Giyimci",
+		"POI_SAYISI" : "580",
+		"KATEGORI" : "GİYİM",
+		"DIL" : "TÜRKÇE"
+	},
+	{
+		"json_featuretype" : "pie_graph",
+		"POI_ADI" : "Penti",
+		"POI_SAYISI" : "99",
+		"KATEGORI" : "GİYİM",
+		"DIL" : "YABANCI"
+	}
+]
